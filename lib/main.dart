@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:weather_app/Strings.dart';
 import 'dart:convert' as convert;
@@ -11,7 +12,15 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: WeatherForecast());
+    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: Color.fromRGBO(255, 255, 255, 0.0),
+      statusBarColor: Color.fromRGBO(255, 255, 255, 0.0)
+    ));
+
+    return MaterialApp(
+      home: WeatherForecast(),
+    );
   }
 }
 
@@ -131,7 +140,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
   }
 
   bool isDay() {
-    return currentWeather["sunrise"] < currentTimeInSeconds && currentTimeInSeconds < currentWeather["sunset"];
+    return currentWeather["sunrise"] < currentTimeInSeconds &&
+        currentTimeInSeconds < currentWeather["sunset"];
   }
 
   Container getTopBarContainer() {
@@ -189,8 +199,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       ],
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blueAccent),
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      color: Color.fromRGBO(128, 128, 128, 0.33),
                     ),
                   ),
                   SizedBox(
@@ -217,8 +227,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       ],
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blueAccent),
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      color: Color.fromRGBO(128, 128, 128, 0.33),
                     ),
                   ),
                 ],
@@ -269,6 +279,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 25.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             child: Text(
@@ -289,8 +300,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
         ],
       ),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.blueAccent),
         borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        color: Color.fromRGBO(255, 255, 255, 0.33),
       ),
     );
   }
@@ -304,6 +315,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             child: Text(
@@ -324,8 +336,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
         ],
       ),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.blueAccent),
         borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        color: Color.fromRGBO(255, 255, 255, 0.33),
       ),
     );
   }
