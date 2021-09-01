@@ -62,7 +62,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
               fit: BoxFit.cover),
         ),
         child: Column(children: <Widget>[
-          getTopBarContainer(),
+          topBarContainer,
           Expanded(
             child: SingleChildScrollView(
               physics: BouncingScrollPhysics(),
@@ -105,6 +105,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeather = responseBody["hourly"];
         dailyWeather = responseBody["daily"];
 
+
+        topBarContainer = getTopBarContainer();
         currentWeatherContainer = getCurrentWeather();
         hourlyWeatherContainer = getHourlyForecast();
         dailyWeatherContainer = getDailyForecast();
@@ -152,7 +154,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
   Container getTopBarContainer() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(25.0, 60.0, 15.0, 25.0),
+      margin: const EdgeInsets.fromLTRB(25.0, 60.0, 15.0, 15.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -160,7 +162,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
             "Plovdiv",
             style: TextStyle(fontSize: 30.0),
           ),
-          Icon(Icons.search)
+          Icon(Icons.home_outlined)
         ],
       ),
     );
@@ -628,19 +630,5 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
       ),
       padding: EdgeInsets.symmetric(horizontal: 10.0),
     );
-  }
-}
-
-class DetailsWidget extends StatefulWidget {
-  const DetailsWidget({Key? key}) : super(key: key);
-
-  @override
-  _DetailsWidgetState createState() => _DetailsWidgetState();
-}
-
-class _DetailsWidgetState extends State<DetailsWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
   }
 }
