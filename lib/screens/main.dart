@@ -5,6 +5,8 @@ import 'package:weather_app/Strings.dart';
 import 'dart:convert' as convert;
 import 'package:intl/intl.dart';
 
+import 'chooseLocation.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -19,6 +21,9 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       home: WeatherForecast(),
+      routes: <String, WidgetBuilder>{
+        '/chooseLocation': (BuildContext context) => ChooseLocation(),
+      },
     );
   }
 }
@@ -105,7 +110,6 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeather = responseBody["hourly"];
         dailyWeather = responseBody["daily"];
 
-
         topBarContainer = getTopBarContainer();
         currentWeatherContainer = getCurrentWeather();
         hourlyWeatherContainer = getHourlyForecast();
@@ -162,7 +166,12 @@ class _WeatherForecastState extends State<WeatherForecast> {
             "Plovdiv",
             style: TextStyle(fontSize: 30.0),
           ),
-          Icon(Icons.home_outlined)
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).pushNamed('/chooseLocation');
+            },
+            child: Icon(Icons.home_outlined),
+          ),
         ],
       ),
     );
@@ -448,7 +457,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
                             color: Colors.black.withOpacity(0.5),
                           )),
                       SizedBox(height: 10.0),
-                      Text((currentWeather["visibility"] / 1000).toString() + " km",
+                      Text(
+                          (currentWeather["visibility"] / 1000).toString() +
+                              " km",
                           style: TextStyle(
                             fontSize: 12.0,
                           )),
