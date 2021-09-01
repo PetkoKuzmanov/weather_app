@@ -119,7 +119,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                currentWeather["temp"].toString().substring(0, 2) + "°",
+                double.parse(currentWeather["temp"].toString())
+                        .round()
+                        .toString() +
+                    "°",
                 style: TextStyle(fontSize: 125.0),
               ),
               Column(
@@ -136,7 +139,11 @@ class _WeatherForecastState extends State<WeatherForecast> {
                         SizedBox(
                           width: 10.0,
                         ),
-                        Text(currentWeather["clouds"].toString() + "%",
+                        Text(
+                            double.parse(currentWeather["clouds"].toString())
+                                    .round()
+                                    .toString() +
+                                "%",
                             style: TextStyle(fontSize: 15.0)),
                       ],
                     ),
@@ -160,9 +167,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
                           width: 10.0,
                         ),
                         Text(
-                            currentWeather["feels_like"]
-                                    .toString()
-                                    .substring(0, 2) +
+                            double.parse(
+                                        currentWeather["feels_like"].toString())
+                                    .round()
+                                    .toString() +
                                 "°",
                             style: TextStyle(fontSize: 15.0)),
                       ],
@@ -186,7 +194,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
               Row(children: [
                 Icon(Icons.arrow_upward_rounded),
                 Text(
-                  dailyWeather[0]["temp"]["max"].toString().substring(0, 2) +
+                  double.parse(dailyWeather[0]["temp"]["max"].toString())
+                          .round()
+                          .toString() +
                       "°C",
                   style: TextStyle(fontSize: 20.0),
                 ),
@@ -195,7 +205,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
               Row(children: [
                 Icon(Icons.arrow_downward_rounded),
                 Text(
-                  dailyWeather[0]["temp"]["min"].toString().substring(0, 2) +
+                  double.parse(dailyWeather[0]["temp"]["min"].toString())
+                      .round()
+                      .toString() +
                       "°C",
                   style: TextStyle(fontSize: 20.0),
                 ),
@@ -319,7 +331,10 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
           ),
           SizedBox(height: 10),
           Text(
-            widget.hourlyForecast["temp"].toString().substring(0, 2) + "°",
+            double.parse(widget.hourlyForecast["temp"].toString())
+                .round()
+                .toString() +
+                "°",
             style: TextStyle(fontSize: 15.0),
           ),
           SizedBox(height: 10),
@@ -373,7 +388,9 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
           Row(
             children: [
               Text(
-                widget.dailyForecast["temp"]["max"].toString().substring(0, 2) +
+                double.parse(widget.dailyForecast["temp"]["max"].toString())
+                    .round()
+                    .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
@@ -384,7 +401,9 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
           Row(
             children: [
               Text(
-                widget.dailyForecast["temp"]["min"].toString().substring(0, 2) +
+                double.parse(widget.dailyForecast["temp"]["min"].toString())
+                    .round()
+                    .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
