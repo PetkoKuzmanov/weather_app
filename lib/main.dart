@@ -14,9 +14,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor: Color.fromRGBO(255, 255, 255, 0.0),
-      statusBarColor: Color.fromRGBO(255, 255, 255, 0.0)
-    ));
+        systemNavigationBarColor: Color.fromRGBO(255, 255, 255, 0.0),
+        statusBarColor: Color.fromRGBO(255, 255, 255, 0.0)));
 
     return MaterialApp(
       home: WeatherForecast(),
@@ -284,9 +283,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
           Padding(
             child: Text(
               "Hourly Forecast",
-              style: TextStyle(fontSize: 20.0),
+              style: TextStyle(fontSize: 17.0),
             ),
-            padding: EdgeInsets.all(15.0),
+            padding: EdgeInsets.all(20.0),
           ),
           Container(
               margin: const EdgeInsets.only(right: 10.0),
@@ -320,9 +319,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
           Padding(
             child: Text(
               "Daily Forecast",
-              style: TextStyle(fontSize: 20.0),
+              style: TextStyle(fontSize: 17.0),
             ),
-            padding: EdgeInsets.all(15.0),
+            padding: EdgeInsets.all(20.0),
           ),
           Container(
               margin: const EdgeInsets.only(right: 10.0),
@@ -376,13 +375,11 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
             time,
             style: TextStyle(fontSize: 15.0),
           ),
-          SizedBox(height: 10),
           Image.asset(
             "assets/images/$image.png",
             width: 50,
             height: 50,
           ),
-          SizedBox(height: 10),
           Text(
             double.parse(widget.hourlyForecast["temp"].toString())
                     .round()
@@ -412,14 +409,17 @@ class DailyForecastWidget extends StatefulWidget {
 class _DailyForecastWidgetState extends State<DailyForecastWidget> {
   @override
   Widget build(BuildContext context) {
-    var date = "Today";
-    String image;
+    var dateTime =
+        DateTime.fromMillisecondsSinceEpoch(widget.dailyForecast["dt"] * 1000);
+    var date = DateFormat.MMMd().format(dateTime);
 
-    if (widget.position != 0) {
-      var dateTime = DateTime.fromMillisecondsSinceEpoch(
-          widget.dailyForecast["dt"] * 1000);
-      date = DateFormat.MMMd().format(dateTime);
+    var dayOfWeek = DateFormat.E().format(dateTime);
+
+    if (widget.position == 0) {
+      dayOfWeek = "Today";
     }
+
+    String image;
 
     image = widget.dailyForecast["weather"][0]["icon"].toString();
 
@@ -428,16 +428,30 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            date,
+            dayOfWeek,
             style: TextStyle(fontSize: 15.0),
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 5.0),
+          Text(
+            date,
+            style: TextStyle(
+              fontSize: 15.0,
+              color: Colors.black.withOpacity(0.5),
+            ),
+          ),
           Image.asset(
             "assets/images/$image.png",
             width: 50,
             height: 50,
           ),
-          SizedBox(height: 10),
+          Text(
+            widget.dailyForecast["weather"][0]["main"].toString(),
+            style: TextStyle(
+              fontSize: 15.0,
+              color: Colors.black.withOpacity(0.5),
+            ),
+          ),
+          SizedBox(height: 15.0),
           Row(
             children: [
               Text(
@@ -447,10 +461,13 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
-              Icon(Icons.arrow_upward_rounded)
+              Icon(
+                Icons.arrow_upward_rounded,
+                size: 20.0,
+              )
             ],
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 15),
           Row(
             children: [
               Text(
@@ -460,7 +477,10 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
-              Icon(Icons.arrow_downward_rounded)
+              Icon(
+                Icons.arrow_downward_rounded,
+                size: 20.0,
+              )
             ],
           ),
           SizedBox(height: 10),
