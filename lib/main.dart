@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:weather_app/Strings.dart';
 import 'dart:convert' as convert;
-import 'dart:developer' as developer;
 import 'package:intl/intl.dart';
 
 void main() {
@@ -35,6 +32,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
   var hourlyWeatherContainer = Container();
   var dailyWeatherContainer = Container();
 
+  var currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch / 1000;
+
+  var backgroundImage = "day_clear";
+
   @override
   void initState() {
     super.initState();
@@ -44,28 +45,36 @@ class _WeatherForecastState extends State<WeatherForecast> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(children: [
-        getTopBarContainer(),
-        Expanded(
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 50.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                currentWeatherContainer,
-                SizedBox(height: 10.0),
-                Center(
-                  child: hourlyWeatherContainer,
-                ),
-                Center(
-                  child: dailyWeatherContainer,
-                )
-              ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage(
+                  Strings.backgroundImagesUrl + "$backgroundImage.png"),
+              fit: BoxFit.cover),
+        ),
+        child: Column(children: <Widget>[
+          getTopBarContainer(),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              padding: EdgeInsets.only(bottom: 50.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  currentWeatherContainer,
+                  SizedBox(height: 10.0),
+                  Center(
+                    child: hourlyWeatherContainer,
+                  ),
+                  Center(
+                    child: dailyWeatherContainer,
+                  )
+                ],
+              ),
             ),
-          ),
-        )
-      ]),
+          )
+        ]),
+      ),
     );
   }
 
@@ -86,11 +95,43 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeatherContainer = getHourlyForecast();
         dailyWeatherContainer = getDailyForecast();
 
+        switch (currentWeather["weather"][0]["main"]) {
+          case "Thunderstorm":
+            break;
+          case "Drizzle":
+            if (isDay()) {
+              backgroundImage = "day_drizzle";
+            } else {
+              backgroundImage = "night_drizzle";
+            }
+            break;
+          case "Rain":
+            break;
+          case "Clear":
+            if (isDay()) {
+              backgroundImage = "day_clear";
+            } else {
+              backgroundImage = "night_clear";
+            }
+            break;
+          case "Clouds":
+            if (isDay()) {
+              backgroundImage = "day_cloudy";
+            } else {
+              backgroundImage = "night_cloudy";
+            }
+            break;
+        }
+
         print('Request completed');
       } else {
         print('Request failed with status: ${response.statusCode}.');
       }
     });
+  }
+
+  bool isDay() {
+    return currentWeather["sunrise"] < currentTimeInSeconds && currentTimeInSeconds < currentWeather["sunset"];
   }
 
   Container getTopBarContainer() {
@@ -206,8 +247,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                 Icon(Icons.arrow_downward_rounded),
                 Text(
                   double.parse(dailyWeather[0]["temp"]["min"].toString())
-                      .round()
-                      .toString() +
+                          .round()
+                          .toString() +
                       "°C",
                   style: TextStyle(fontSize: 20.0),
                 ),
@@ -332,8 +373,8 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
           SizedBox(height: 10),
           Text(
             double.parse(widget.hourlyForecast["temp"].toString())
-                .round()
-                .toString() +
+                    .round()
+                    .toString() +
                 "°",
             style: TextStyle(fontSize: 15.0),
           ),
@@ -389,8 +430,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
             children: [
               Text(
                 double.parse(widget.dailyForecast["temp"]["max"].toString())
-                    .round()
-                    .toString() +
+                        .round()
+                        .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
@@ -402,8 +443,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
             children: [
               Text(
                 double.parse(widget.dailyForecast["temp"]["min"].toString())
-                    .round()
-                    .toString() +
+                        .round()
+                        .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
