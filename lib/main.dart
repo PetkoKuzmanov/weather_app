@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:weather_app/Strings.dart';
 import 'dart:convert' as convert;
 import 'dart:developer' as developer;
+import 'package:intl/intl.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -29,8 +31,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
   List hourlyWeather = [];
   List dailyWeather = [];
 
+  var topBarContainer = Container();
   var currentWeatherContainer = Container();
   var hourlyWeatherContainer = Container();
+  var dailyWeatherContainer = Container();
 
   @override
   void initState() {
@@ -42,55 +46,19 @@ class _WeatherForecastState extends State<WeatherForecast> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(children: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 75.0, horizontal: 25.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Plovdiv",
-                style: TextStyle(fontSize: 30.0),
-              ),
-              Icon(Icons.search)
-            ],
+        getTopBarContainer(),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: 50.0),
+            child: Column(
+              children: [
+                currentWeatherContainer,
+                hourlyWeatherContainer,
+                dailyWeatherContainer,
+              ],
+            ),
           ),
-        ),
-        currentWeatherContainer,
-        hourlyWeatherContainer,
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
-          child: Column(
-            children: [
-              Padding(
-                child: Text(
-                  "Daily Forecast",
-                  style: TextStyle(fontSize: 20.0),
-                ),
-                padding: EdgeInsets.all(10.0),
-              ),
-              Container(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        DailyForecastWidget(),
-                        DailyForecastWidget(),
-                        DailyForecastWidget(),
-                        DailyForecastWidget(),
-                        DailyForecastWidget(),
-                        DailyForecastWidget(),
-                      ],
-                    ),
-                  ))
-            ],
-          ),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.blueAccent),
-            borderRadius: BorderRadius.all(Radius.circular(10.0)),
-          ),
-        ),
+        )
       ]),
     );
   }
@@ -110,12 +78,29 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
         currentWeatherContainer = getCurrentWeather();
         hourlyWeatherContainer = getHourlyForecast();
+        dailyWeatherContainer = getDailyForecast();
 
         print('Request completed');
       } else {
         print('Request failed with status: ${response.statusCode}.');
       }
     });
+  }
+
+  Container getTopBarContainer() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(25.0, 60.0, 15.0, 25.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Plovdiv",
+            style: TextStyle(fontSize: 30.0),
+          ),
+          Icon(Icons.search)
+        ],
+      ),
+    );
   }
 
   Container getCurrentWeather() {
@@ -137,7 +122,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
   Container getHourlyForecast() {
     List<Widget> hourWidgetList = [];
-    for (int i = 0; i < 24; i++) {
+    for (int i = 0; i < 25; i++) {
       hourWidgetList.add(HourlyForecastWidget(hourlyWeather[i], i));
     }
 
@@ -153,12 +138,47 @@ class _WeatherForecastState extends State<WeatherForecast> {
             padding: EdgeInsets.all(15.0),
           ),
           Container(
-              margin: const EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
+              margin: const EdgeInsets.only(right: 10.0),
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: hourWidgetList,
+                ),
+              ))
+        ],
+      ),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blueAccent),
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+      ),
+    );
+  }
+
+  Container getDailyForecast() {
+    List<Widget> dayWidgetList = [];
+    for (int i = 0; i < 8; i++) {
+      dayWidgetList.add(DailyForecastWidget(dailyWeather[i], i));
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
+      child: Column(
+        children: [
+          Padding(
+            child: Text(
+              "Daily Forecast",
+              style: TextStyle(fontSize: 20.0),
+            ),
+            padding: EdgeInsets.all(15.0),
+          ),
+          Container(
+              margin: const EdgeInsets.only(right: 10.0),
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: dayWidgetList,
                 ),
               ))
         ],
@@ -191,7 +211,7 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
     if (widget.position != 0) {
       var dateTime = DateTime.fromMillisecondsSinceEpoch(
           widget.hourlyForecast["dt"] * 1000);
-      time = dateTime.hour.toString() + ":00";
+      time = DateFormat.Hm().format(dateTime);
     }
 
     image = widget.hourlyForecast["weather"][0]["icon"].toString();
@@ -223,26 +243,50 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
   }
 }
 
-class DailyForecastWidget extends StatelessWidget {
-  const DailyForecastWidget({Key? key}) : super(key: key);
+class DailyForecastWidget extends StatefulWidget {
+  const DailyForecastWidget(this.dailyForecast, this.position, {Key? key})
+      : super(key: key);
+
+  final Map<String, dynamic> dailyForecast;
+  final position;
 
   @override
+  _DailyForecastWidgetState createState() => _DailyForecastWidgetState();
+}
+
+class _DailyForecastWidgetState extends State<DailyForecastWidget> {
+  @override
   Widget build(BuildContext context) {
+    var date = "Today";
+    String image;
+
+    if (widget.position != 0) {
+      var dateTime = DateTime.fromMillisecondsSinceEpoch(
+          widget.dailyForecast["dt"] * 1000);
+      date = DateFormat.MMMd().format(dateTime);
+    }
+
+    image = widget.dailyForecast["weather"][0]["icon"].toString();
+
     return Padding(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Today",
+            date,
             style: TextStyle(fontSize: 15.0),
           ),
           SizedBox(height: 10),
-          Icon(Icons.wb_sunny_outlined),
+          Image.asset(
+            "assets/images/$image.png",
+            width: 50,
+            height: 50,
+          ),
           SizedBox(height: 10),
           Row(
             children: [
               Text(
-                "30°",
+                widget.dailyForecast["temp"]["max"].toString().substring(0, 2) + "°",
                 style: TextStyle(fontSize: 15.0),
               ),
               Icon(Icons.arrow_upward_rounded)
@@ -252,7 +296,7 @@ class DailyForecastWidget extends StatelessWidget {
           Row(
             children: [
               Text(
-                "25°",
+                widget.dailyForecast["temp"]["min"].toString().substring(0, 2) + "°",
                 style: TextStyle(fontSize: 15.0),
               ),
               Icon(Icons.arrow_downward_rounded)
