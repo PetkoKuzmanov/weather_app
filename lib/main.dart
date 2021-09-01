@@ -7,7 +7,6 @@ import 'dart:convert' as convert;
 import 'dart:developer' as developer;
 import 'package:intl/intl.dart';
 
-
 void main() {
   runApp(MyApp());
 }
@@ -49,12 +48,19 @@ class _WeatherForecastState extends State<WeatherForecast> {
         getTopBarContainer(),
         Expanded(
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             padding: EdgeInsets.only(bottom: 50.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 currentWeatherContainer,
-                hourlyWeatherContainer,
-                dailyWeatherContainer,
+                SizedBox(height: 10.0),
+                Center(
+                  child: hourlyWeatherContainer,
+                ),
+                Center(
+                  child: dailyWeatherContainer,
+                )
               ],
             ),
           ),
@@ -105,16 +111,97 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
   Container getCurrentWeather() {
     return Container(
+      padding: EdgeInsets.fromLTRB(25.0, 125.0, 25.0, 0.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            currentWeather["temp"].toString().substring(0, 2),
-            style: TextStyle(fontSize: 125.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                currentWeather["temp"].toString().substring(0, 2) + "°",
+                style: TextStyle(fontSize: 125.0),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    width: 80.0,
+                    padding:
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Icon(Icons.cloud_outlined, size: 20.0),
+                        SizedBox(
+                          width: 10.0,
+                        ),
+                        Text(currentWeather["clouds"].toString() + "%",
+                            style: TextStyle(fontSize: 15.0)),
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blueAccent),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10.0,
+                  ),
+                  Container(
+                    width: 80.0,
+                    padding:
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Icon(Icons.face_outlined, size: 20.0),
+                        SizedBox(
+                          width: 10.0,
+                        ),
+                        Text(
+                            currentWeather["feels_like"]
+                                    .toString()
+                                    .substring(0, 2) +
+                                "°",
+                            style: TextStyle(fontSize: 15.0)),
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blueAccent),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           Text(
             currentWeather["weather"][0]["main"].toString(),
-            style: TextStyle(fontSize: 50.0),
+            style: TextStyle(fontSize: 30.0),
           ),
+          SizedBox(height: 10.0),
+          Row(
+            children: [
+              Row(children: [
+                Icon(Icons.arrow_upward_rounded),
+                Text(
+                  dailyWeather[0]["temp"]["max"].toString().substring(0, 2) +
+                      "°C",
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              ]),
+              SizedBox(width: 20),
+              Row(children: [
+                Icon(Icons.arrow_downward_rounded),
+                Text(
+                  dailyWeather[0]["temp"]["min"].toString().substring(0, 2) +
+                      "°C",
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              ])
+            ],
+          )
         ],
       ),
     );
@@ -286,7 +373,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
           Row(
             children: [
               Text(
-                widget.dailyForecast["temp"]["max"].toString().substring(0, 2) + "°",
+                widget.dailyForecast["temp"]["max"].toString().substring(0, 2) +
+                    "°",
                 style: TextStyle(fontSize: 15.0),
               ),
               Icon(Icons.arrow_upward_rounded)
@@ -296,7 +384,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
           Row(
             children: [
               Text(
-                widget.dailyForecast["temp"]["min"].toString().substring(0, 2) + "°",
+                widget.dailyForecast["temp"]["min"].toString().substring(0, 2) +
+                    "°",
                 style: TextStyle(fontSize: 15.0),
               ),
               Icon(Icons.arrow_downward_rounded)
