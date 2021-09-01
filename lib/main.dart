@@ -39,6 +39,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
   var currentWeatherContainer = Container();
   var hourlyWeatherContainer = Container();
   var dailyWeatherContainer = Container();
+  var detailsContainer = Container();
 
   var currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch / 1000;
 
@@ -70,13 +71,18 @@ class _WeatherForecastState extends State<WeatherForecast> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   currentWeatherContainer,
-                  SizedBox(height: 10.0),
+                  SizedBox(height: 25.0),
                   Center(
                     child: hourlyWeatherContainer,
                   ),
+                  SizedBox(height: 25.0),
                   Center(
                     child: dailyWeatherContainer,
-                  )
+                  ),
+                  SizedBox(height: 25.0),
+                  Center(
+                    child: detailsContainer,
+                  ),
                 ],
               ),
             ),
@@ -102,6 +108,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
         currentWeatherContainer = getCurrentWeather();
         hourlyWeatherContainer = getHourlyForecast();
         dailyWeatherContainer = getDailyForecast();
+        detailsContainer = getDetails();
 
         switch (currentWeather["weather"][0]["main"]) {
           case "Thunderstorm":
@@ -276,7 +283,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 25.0),
+      margin: const EdgeInsets.symmetric(horizontal: 25.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -312,7 +319,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
+      margin: const EdgeInsets.symmetric(horizontal: 25.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -334,6 +341,139 @@ class _WeatherForecastState extends State<WeatherForecast> {
               ))
         ],
       ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        color: Color.fromRGBO(255, 255, 255, 0.33),
+      ),
+    );
+  }
+
+  Container getDetails() {
+    return Container(
+      padding: EdgeInsets.all(20.0),
+      margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          child: Text(
+            "Details",
+            style: TextStyle(fontSize: 17.0),
+          ),
+          padding: EdgeInsets.only(bottom: 20.0),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Precipitation",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text(hourlyWeather[0]["pop"].toString() + " mm",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 30.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Humidity",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text(currentWeather["humidity"].toString() + "%",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 30.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("UV",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text(currentWeather["uvi"].toString(),
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Wind",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text(currentWeather["wind_speed"].toString() + " km/h",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 30.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Visibility",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text((currentWeather["visibility"] / 1000).toString() + " km",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 30.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Pressure",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black.withOpacity(0.5),
+                          )),
+                      SizedBox(height: 10.0),
+                      Text(currentWeather["pressure"].toString() + " hPa",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                          )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ]),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(10.0)),
         color: Color.fromRGBO(255, 255, 255, 0.33),
@@ -488,5 +628,19 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
       ),
       padding: EdgeInsets.symmetric(horizontal: 10.0),
     );
+  }
+}
+
+class DetailsWidget extends StatefulWidget {
+  const DetailsWidget({Key? key}) : super(key: key);
+
+  @override
+  _DetailsWidgetState createState() => _DetailsWidgetState();
+}
+
+class _DetailsWidgetState extends State<DetailsWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
   }
 }
