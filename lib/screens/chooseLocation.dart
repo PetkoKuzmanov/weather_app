@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChooseLocation extends StatefulWidget {
@@ -11,6 +12,8 @@ class ChooseLocation extends StatefulWidget {
 class _ChooseLocationState extends State<ChooseLocation> {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -37,6 +40,13 @@ class _ChooseLocationState extends State<ChooseLocation> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).pushNamed('/searchLocation');
+        },
+        child: const Icon(Icons.add_outlined),
+        backgroundColor: Colors.blueAccent,
       ),
     );
   }

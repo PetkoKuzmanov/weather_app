@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
 
+import 'SearchLocation.dart';
 import 'chooseLocation.dart';
 
 void main() {
@@ -19,6 +20,7 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
         systemNavigationBarColor: Color.fromRGBO(255, 255, 255, 0.0),
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
       home: WeatherForecast(),
       routes: <String, WidgetBuilder>{
         '/chooseLocation': (BuildContext context) => ChooseLocation(),
+        '/searchLocation': (BuildContext context) => SearchLocation(),
       },
     );
   }
@@ -183,6 +186,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
         currentWeather = responseBody["current"];
         hourlyWeather = responseBody["hourly"];
         dailyWeather = responseBody["daily"];
+
+        // await prefs.setStringList('current', responseBody["current"]);
+        // await prefs.setStringList('hourly', responseBody["hourly"]);
+        // await prefs.setStringList('daily', responseBody["daily"]);
 
         topBarContainer = _getTopBarContainer();
         currentWeatherContainer = _getCurrentWeather();
