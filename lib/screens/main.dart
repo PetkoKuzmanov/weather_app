@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:weather_app/Strings.dart';
 import 'dart:convert' as convert;
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'chooseLocation.dart';
 
@@ -53,7 +57,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
   @override
   void initState() {
     super.initState();
-    loadData();
+    _getWeatherData();
   }
 
   @override
@@ -97,8 +101,30 @@ class _WeatherForecastState extends State<WeatherForecast> {
     );
   }
 
-  Future<void> loadData() async {
-    var url = Uri.parse(Strings.plovdivCall);
+  void _getWeatherData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var lastLatitude = prefs.getDouble('latitude');
+    if (lastLatitude == null) {
+      _determinePosition().then((position) {
+        _addLocationDataToSharedPreferences(position.latitude, position.longitude);
+        _loadData();
+      });
+    } else {
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var latitude = prefs.getDouble('latitude');
+    var longitude = prefs.getDouble('longitude');
+
+    print(latitude);
+    print(longitude);
+
+    var url = Uri.http(Strings.weatherUri, "/data/2.5/onecall", {"lat" : latitude.toString(), "lon" : longitude.toString(), "exclude" : "minutely,alerts", "units" : "metric", "appid" : Strings.apiKey});
     var response = await http.get(url);
 
     setState(() {
@@ -110,17 +136,17 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeather = responseBody["hourly"];
         dailyWeather = responseBody["daily"];
 
-        topBarContainer = getTopBarContainer();
-        currentWeatherContainer = getCurrentWeather();
-        hourlyWeatherContainer = getHourlyForecast();
-        dailyWeatherContainer = getDailyForecast();
-        detailsContainer = getDetails();
+        topBarContainer = _getTopBarContainer();
+        currentWeatherContainer = _getCurrentWeather();
+        hourlyWeatherContainer = _getHourlyForecast();
+        dailyWeatherContainer = _getDailyForecast();
+        detailsContainer = _getDetails();
 
         switch (currentWeather["weather"][0]["main"]) {
           case "Thunderstorm":
             break;
           case "Drizzle":
-            if (isDay()) {
+            if (_isDay()) {
               backgroundImage = "day_drizzle";
             } else {
               backgroundImage = "night_drizzle";
@@ -129,14 +155,14 @@ class _WeatherForecastState extends State<WeatherForecast> {
           case "Rain":
             break;
           case "Clear":
-            if (isDay()) {
+            if (_isDay()) {
               backgroundImage = "day_clear";
             } else {
               backgroundImage = "night_clear";
             }
             break;
           case "Clouds":
-            if (isDay()) {
+            if (_isDay()) {
               backgroundImage = "day_cloudy";
             } else {
               backgroundImage = "night_cloudy";
@@ -151,12 +177,13 @@ class _WeatherForecastState extends State<WeatherForecast> {
     });
   }
 
-  bool isDay() {
+
+  bool _isDay() {
     return currentWeather["sunrise"] < currentTimeInSeconds &&
         currentTimeInSeconds < currentWeather["sunset"];
   }
 
-  Container getTopBarContainer() {
+  Container _getTopBarContainer() {
     return Container(
       margin: const EdgeInsets.fromLTRB(25.0, 60.0, 15.0, 15.0),
       child: Row(
@@ -177,7 +204,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     );
   }
 
-  Container getCurrentWeather() {
+  Container _getCurrentWeather() {
     return Container(
       padding: EdgeInsets.fromLTRB(25.0, 125.0, 25.0, 0.0),
       child: Column(
@@ -287,7 +314,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     );
   }
 
-  Container getHourlyForecast() {
+  Container _getHourlyForecast() {
     List<Widget> hourWidgetList = [];
     for (int i = 0; i < 25; i++) {
       hourWidgetList.add(HourlyForecastWidget(hourlyWeather[i], i));
@@ -323,7 +350,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     );
   }
 
-  Container getDailyForecast() {
+  Container _getDailyForecast() {
     List<Widget> dayWidgetList = [];
     for (int i = 0; i < 8; i++) {
       dayWidgetList.add(DailyForecastWidget(dailyWeather[i], i));
@@ -359,7 +386,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
     );
   }
 
-  Container getDetails() {
+  Container _getDetails() {
     return Container(
       padding: EdgeInsets.all(20.0),
       margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 25.0),
@@ -389,7 +416,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       SizedBox(height: 10.0),
                       Text(hourlyWeather[0]["pop"].toString() + " mm",
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -405,7 +432,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       SizedBox(height: 10.0),
                       Text(currentWeather["humidity"].toString() + "%",
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -421,7 +448,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       SizedBox(height: 10.0),
                       Text(currentWeather["uvi"].toString(),
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -443,7 +470,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       SizedBox(height: 10.0),
                       Text(currentWeather["wind_speed"].toString() + " km/h",
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -461,7 +488,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                           (currentWeather["visibility"] / 1000).toString() +
                               " km",
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -477,7 +504,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                       SizedBox(height: 10.0),
                       Text(currentWeather["pressure"].toString() + " hPa",
                           style: TextStyle(
-                            fontSize: 12.0,
+                            fontSize: 15.0,
                           )),
                     ],
                   ),
@@ -643,3 +670,56 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
     );
   }
 }
+
+Future<Position> _determinePosition() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Test if location services are enabled.
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    // Location services are not enabled don't continue
+    // accessing the position and request users of the
+    // App to enable the location services.
+    return Future.error('Location services are disabled.');
+  }
+
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      // Permissions are denied, next time you could try
+      // requesting permissions again (this is also where
+      // Android's shouldShowRequestPermissionRationale
+      // returned true. According to Android guidelines
+      // your App should show an explanatory UI now.
+      return Future.error('Location permissions are denied');
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    // Permissions are denied forever, handle appropriately.
+    return Future.error(
+        'Location permissions are permanently denied, we cannot request permissions.');
+  }
+
+  // When we reach here, permissions are granted and we can
+  // continue accessing the position of the device.
+  return await Geolocator.getCurrentPosition();
+}
+
+void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  var lastLatitude = prefs.getDouble('latitude');
+  var lastLongitude = prefs.getDouble('longitude');
+
+  if (lastLatitude == null) {
+    await prefs.setDouble('latitude', latitude);
+    await prefs.setDouble('longitude', longitude);
+  }
+
+  print(prefs.getDouble('latitude'));
+  print(prefs.getDouble('longitude'));
+}
+
