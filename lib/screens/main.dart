@@ -8,6 +8,7 @@ import 'dart:convert' as convert;
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geocoding/geocoding.dart';
 
 import 'chooseLocation.dart';
 
@@ -53,6 +54,10 @@ class _WeatherForecastState extends State<WeatherForecast> {
   var currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch / 1000;
 
   var backgroundImage = "day_clear";
+
+  late double latitude;
+  late double longitude;
+  late String city;
 
   @override
   void initState() {
@@ -118,11 +123,13 @@ class _WeatherForecastState extends State<WeatherForecast> {
   Future<void> _loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    var latitude = prefs.getDouble('latitude');
-    var longitude = prefs.getDouble('longitude');
+    latitude = prefs.getDouble('latitude')!;
+    longitude = prefs.getDouble('longitude')!;
+    city = prefs.getString('city')!;
 
     print(latitude);
     print(longitude);
+    print(city);
 
     var url = Uri.http(Strings.weatherUri, "/data/2.5/onecall", {"lat" : latitude.toString(), "lon" : longitude.toString(), "exclude" : "minutely,alerts", "units" : "metric", "appid" : Strings.apiKey});
     var response = await http.get(url);
@@ -190,7 +197,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Plovdiv",
+            city,
             style: TextStyle(fontSize: 30.0),
           ),
           GestureDetector(
@@ -711,15 +718,14 @@ Future<Position> _determinePosition() async {
 void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  var lastLatitude = prefs.getDouble('latitude');
-  var lastLongitude = prefs.getDouble('longitude');
+  List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
 
-  if (lastLatitude == null) {
-    await prefs.setDouble('latitude', latitude);
-    await prefs.setDouble('longitude', longitude);
-  }
+  await prefs.setDouble('latitude', latitude);
+  await prefs.setDouble('longitude', longitude);
+  await prefs.setString('city', placemarks.first.locality ?? "City");
 
   print(prefs.getDouble('latitude'));
   print(prefs.getDouble('longitude'));
+  print("Got location data");
 }
 
