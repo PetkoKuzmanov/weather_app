@@ -130,11 +130,26 @@ class _WeatherForecastState extends State<WeatherForecast> {
     if (lastLatitude == null) {
       _determinePosition().then((position) {
         _addLocationDataToSharedPreferences(position.latitude, position.longitude);
-        _loadData();
       });
     } else {
       _loadData();
     }
+  }
+
+  void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<Placemark> placemark = await placemarkFromCoordinates(latitude, longitude);
+
+    await prefs.setDouble('latitude', latitude);
+    await prefs.setDouble('longitude', longitude);
+    await prefs.setString('city', placemark.first.locality ?? "City");
+
+    print(prefs.getDouble('latitude'));
+    print(prefs.getDouble('longitude'));
+    print(prefs.getString('city'));
+    print("Got location data");
+    _loadData();
   }
 
   Future<void> _loadData() async {
@@ -732,18 +747,5 @@ Future<Position> _determinePosition() async {
   return await Geolocator.getCurrentPosition();
 }
 
-void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  List<Placemark> placemark = await placemarkFromCoordinates(latitude, longitude);
-
-  await prefs.setDouble('latitude', latitude);
-  await prefs.setDouble('longitude', longitude);
-  await prefs.setString('city', placemark.first.locality ?? "City");
-
-  print(prefs.getDouble('latitude'));
-  print(prefs.getDouble('longitude'));
-  print(prefs.getString('city'));
-  print("Got location data");
-}
 
