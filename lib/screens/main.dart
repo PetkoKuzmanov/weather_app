@@ -129,17 +129,20 @@ class _WeatherForecastState extends State<WeatherForecast> {
     var lastLatitude = prefs.getDouble('latitude');
     if (lastLatitude == null) {
       _determinePosition().then((position) {
-        _addLocationDataToSharedPreferences(position.latitude, position.longitude);
+        _addLocationDataToSharedPreferences(
+            position.latitude, position.longitude);
       });
     } else {
       _loadData();
     }
   }
 
-  void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
+  void _addLocationDataToSharedPreferences(
+      double latitude, double longitude) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    List<Placemark> placemark = await placemarkFromCoordinates(latitude, longitude);
+    List<Placemark> placemark =
+        await placemarkFromCoordinates(latitude, longitude);
 
     await prefs.setDouble('latitude', latitude);
     await prefs.setDouble('longitude', longitude);
@@ -163,7 +166,13 @@ class _WeatherForecastState extends State<WeatherForecast> {
     print(longitude);
     print(city);
 
-    var url = Uri.http(Strings.weatherUri, "/data/2.5/onecall", {"lat" : latitude.toString(), "lon" : longitude.toString(), "exclude" : "minutely,alerts", "units" : "metric", "appid" : Strings.apiKey});
+    var url = Uri.http(Strings.weatherUri, "/data/2.5/onecall", {
+      "lat": latitude.toString(),
+      "lon": longitude.toString(),
+      "exclude": "minutely,alerts",
+      "units": "metric",
+      "appid": Strings.apiKey
+    });
     var response = await http.get(url);
 
     setState(() {
@@ -183,15 +192,13 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
         switch (currentWeather["weather"][0]["main"]) {
           case "Thunderstorm":
-            break;
           case "Drizzle":
+          case "Rain":
             if (_isDay()) {
               backgroundImage = "day_drizzle";
             } else {
               backgroundImage = "night_drizzle";
             }
-            break;
-          case "Rain":
             break;
           case "Clear":
             if (_isDay()) {
@@ -215,7 +222,6 @@ class _WeatherForecastState extends State<WeatherForecast> {
       }
     });
   }
-
 
   bool _isDay() {
     return currentWeather["sunrise"] < currentTimeInSeconds &&
@@ -372,14 +378,15 @@ class _WeatherForecastState extends State<WeatherForecast> {
             padding: EdgeInsets.all(20.0),
           ),
           Container(
-              margin: const EdgeInsets.only(right: 10.0),
-              child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: hourWidgetList,
-                ),
-              ))
+            margin: const EdgeInsets.only(right: 10.0),
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: hourWidgetList,
+              ),
+            ),
+          ),
         ],
       ),
       decoration: BoxDecoration(
@@ -609,7 +616,7 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
           SizedBox(height: 10),
         ],
       ),
-      padding: EdgeInsets.symmetric(horizontal: 10.0),
+      padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 20.0),
     );
   }
 }
@@ -670,7 +677,7 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
               color: Colors.black.withOpacity(0.5),
             ),
           ),
-          SizedBox(height: 15.0),
+          SizedBox(height: 20.0),
           Row(
             children: [
               Text(
@@ -686,7 +693,7 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
               )
             ],
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 15.0),
           Row(
             children: [
               Text(
@@ -705,7 +712,7 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
           SizedBox(height: 10),
         ],
       ),
-      padding: EdgeInsets.symmetric(horizontal: 10.0),
+      padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 15.0),
     );
   }
 }
@@ -746,6 +753,3 @@ Future<Position> _determinePosition() async {
   // continue accessing the position of the device.
   return await Geolocator.getCurrentPosition();
 }
-
-
-
