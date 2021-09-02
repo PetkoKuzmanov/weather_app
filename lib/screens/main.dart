@@ -20,7 +20,6 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
         systemNavigationBarColor: Color.fromRGBO(255, 255, 255, 0.0),
@@ -140,6 +139,14 @@ class _WeatherForecastState extends State<WeatherForecast> {
     }
   }
 
+  void _getWeatherDataFromButton() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _determinePosition().then((position) {
+      _addLocationDataToSharedPreferences(
+          position.latitude, position.longitude);
+    });
+  }
+
   void _addLocationDataToSharedPreferences(
       double latitude, double longitude) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -245,11 +252,27 @@ class _WeatherForecastState extends State<WeatherForecast> {
             city,
             style: TextStyle(fontSize: 30.0),
           ),
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).pushNamed('/chooseLocation');
-            },
-            child: Icon(Icons.home_outlined),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _getWeatherDataFromButton();
+                },
+                child: Icon(Icons.location_on_outlined),
+              ),
+              SizedBox(
+                width: 20.0,
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pushNamed('/chooseLocation');
+                },
+                child: Icon(Icons.home_outlined),
+              ),
+              SizedBox(
+                width: 5.0,
+              ),
+            ],
           ),
         ],
       ),
