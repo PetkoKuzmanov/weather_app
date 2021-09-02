@@ -68,42 +68,59 @@ class _WeatherForecastState extends State<WeatherForecast> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage(
-                  Strings.backgroundImagesUrl + "$backgroundImage.png"),
-              fit: BoxFit.cover),
-        ),
-        child: Column(children: <Widget>[
-          topBarContainer,
-          Expanded(
-            child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.only(bottom: 50.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  currentWeatherContainer,
-                  SizedBox(height: 25.0),
-                  Center(
-                    child: hourlyWeatherContainer,
-                  ),
-                  SizedBox(height: 25.0),
-                  Center(
-                    child: dailyWeatherContainer,
-                  ),
-                  SizedBox(height: 25.0),
-                  Center(
-                    child: detailsContainer,
-                  ),
-                ],
-              ),
-            ),
-          )
-        ]),
-      ),
+      body: getBody(),
     );
+  }
+
+  Widget getBody() {
+    bool showLoadingDialog = hourlyWeather.isEmpty;
+    if (showLoadingDialog) {
+      return getProgressDialog();
+    } else {
+      return getWeatherWidget();
+    }
+  }
+
+  Widget getWeatherWidget() {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+            image: AssetImage(
+                Strings.backgroundImagesUrl + "$backgroundImage.png"),
+            fit: BoxFit.cover),
+      ),
+      child: Column(children: <Widget>[
+        topBarContainer,
+        Expanded(
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            padding: EdgeInsets.only(bottom: 50.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                currentWeatherContainer,
+                SizedBox(height: 25.0),
+                Center(
+                  child: hourlyWeatherContainer,
+                ),
+                SizedBox(height: 25.0),
+                Center(
+                  child: dailyWeatherContainer,
+                ),
+                SizedBox(height: 25.0),
+                Center(
+                  child: detailsContainer,
+                ),
+              ],
+            ),
+          ),
+        )
+      ]),
+    );
+  }
+
+  Widget getProgressDialog() {
+    return Center(child: CircularProgressIndicator());
   }
 
   void _getWeatherData() async {
@@ -718,14 +735,15 @@ Future<Position> _determinePosition() async {
 void _addLocationDataToSharedPreferences(double latitude, double longitude) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+  List<Placemark> placemark = await placemarkFromCoordinates(latitude, longitude);
 
   await prefs.setDouble('latitude', latitude);
   await prefs.setDouble('longitude', longitude);
-  await prefs.setString('city', placemarks.first.locality ?? "City");
+  await prefs.setString('city', placemark.first.locality ?? "City");
 
   print(prefs.getDouble('latitude'));
   print(prefs.getDouble('longitude'));
+  print(prefs.getString('city'));
   print("Got location data");
 }
 
