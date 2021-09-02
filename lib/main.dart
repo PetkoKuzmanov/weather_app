@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: WeatherForecast(),
       routes: <String, WidgetBuilder>{
+        '/mainScreen': (BuildContext context) => WeatherForecast(),
         '/chooseLocation': (BuildContext context) => ChooseLocation(),
         '/searchLocation': (BuildContext context) => SearchLocation(),
       },
@@ -147,7 +148,6 @@ class _WeatherForecastState extends State<WeatherForecast> {
   }
 
   void _getWeatherDataFromButton() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     _determinePosition().then((position) {
       _addLocationDataToSharedPreferences(
           position.latitude, position.longitude);

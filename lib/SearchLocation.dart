@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchLocation extends StatefulWidget {
   const SearchLocation({Key? key}) : super(key: key);
@@ -48,8 +49,10 @@ class _SearchLocationState extends State<SearchLocation> {
                               var cityWidget = CityWidget(
                                 city: city["name"],
                                 country: city["country"]["name"],
-                                latitude: city["location"]["latitude"],
-                                longitude: city["location"]["longitude"],
+                                latitude:
+                                    city["location"]["latitude"].toString(),
+                                longitude:
+                                    city["location"]["longitude"].toString(),
                               );
                               cityWidgets.add(cityWidget);
                             }
@@ -96,16 +99,16 @@ class CityWidget extends StatelessWidget {
 
   final String city;
   final String country;
-  final double latitude;
-  final double longitude;
+  final String latitude;
+  final String longitude;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(latitude.toString() + " " + longitude.toString()),
-        ));
+        _addLocationDataToSharedPreferences(
+                double.parse(latitude), double.parse(longitude), city)
+            .then((value) => Navigator.of(context).pushNamed('/mainScreen'));
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -159,4 +162,13 @@ extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${this.substring(1)}";
   }
+}
+
+Future<void> _addLocationDataToSharedPreferences(
+    double latitude, double longitude, String city) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  await prefs.setDouble('latitude', latitude);
+  await prefs.setDouble('longitude', longitude);
+  await prefs.setString('city', city);
 }
