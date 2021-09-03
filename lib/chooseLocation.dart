@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Strings.dart';
+import 'main.dart';
 
 class ChooseLocation extends StatefulWidget {
   const ChooseLocation({Key? key, required this.citiesListOfDynamics})
@@ -23,7 +24,8 @@ class _ChooseLocationState extends State<ChooseLocation> {
 
     List<Widget> cityWidgets = [];
 
-    for (Map<String, dynamic> city in widget.citiesListOfDynamics) {
+    for (var i = 0; i < widget.citiesListOfDynamics.length; i++) {
+      var city = widget.citiesListOfDynamics[i];
       Map<String, dynamic> currentWeather = city["forecast"]["current"];
 
       late String backgroundImage;
@@ -58,6 +60,7 @@ class _ChooseLocationState extends State<ChooseLocation> {
         temperature: currentWeather["temp"].toString(),
         description: currentWeather["weather"][0]["main"],
         image: backgroundImage,
+        index: i,
       );
 
       cityWidgets.add(cityWidget);
@@ -89,12 +92,12 @@ class _ChooseLocationState extends State<ChooseLocation> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: cityWidgets,
-                ),
-              ),
+              child: ListView.builder(
+                  itemCount: cityWidgets.length,
+                  // crossAxisAlignment: CrossAxisAlignment.start,
+                  itemBuilder: (BuildContext context, int index) {
+                    return cityWidgets[index];
+                  }),
             ),
           ],
         ),
@@ -116,18 +119,29 @@ class CityWidget extends StatelessWidget {
       required this.name,
       required this.temperature,
       required this.description,
-      required this.image})
+      required this.image,
+      required this.index})
       : super(key: key);
 
   final String name;
   final String temperature;
   final String description;
   final String image;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WeatherForecast(
+              currentCityNumber: index,
+            ),
+          ),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -145,9 +159,7 @@ class CityWidget extends StatelessWidget {
             ),
             SizedBox(height: 10.0),
             Text(
-              double.parse(temperature)
-                  .round()
-                  .toString() + "°",
+              double.parse(temperature).round().toString() + "°",
               style: TextStyle(fontSize: 17.0),
             ),
             SizedBox(height: 5.0),
