@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       home: WeatherForecast(currentCityNumber: 0),
       routes: <String, WidgetBuilder>{
         // '/mainScreen': (BuildContext context) => WeatherForecast(currentCityNumber: null),
-        '/chooseLocation': (BuildContext context) => ChooseLocation(),
+        // '/chooseLocation': (BuildContext context) => ChooseLocation(),
         '/searchLocation': (BuildContext context) => SearchLocation(),
       },
     );
@@ -47,7 +47,7 @@ class WeatherForecast extends StatefulWidget {
 }
 
 class _WeatherForecastState extends State<WeatherForecast> {
-  List citiesData = [];
+  List citiesListOfDynamics = [];
   var city = new Map<String, dynamic>();
   var currentWeather = new Map<String, dynamic>();
   List hourlyWeather = [];
@@ -207,16 +207,16 @@ class _WeatherForecastState extends State<WeatherForecast> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     List<String> citiesListOfStrings = prefs.getStringList("cities")!;
-    citiesData = jsonDecode(citiesListOfStrings.toString());
+    citiesListOfDynamics = jsonDecode(citiesListOfStrings.toString());
 
-    city = citiesData[widget.currentCityNumber];
+    city = citiesListOfDynamics[widget.currentCityNumber];
     // city = jsonDecode(prefs.getString("city")!);
     latitude = city["latitude"];
     longitude = city["longitude"];
     cityName = city["name"];
 
-    print("Number of cities: " + citiesData.length.toString());
-    for (dynamic city in citiesData) {
+    print("Number of cities: " + citiesListOfDynamics.length.toString());
+    for (dynamic city in citiesListOfDynamics) {
       print("City: " + city["name"]);
     }
     print(latitude);
@@ -243,7 +243,18 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeather = city["forecast"]["hourly"];
         dailyWeather = city["forecast"]["daily"];
 
-        switch (city["forecast"]["current"]["weather"][0]["main"]) {
+
+        citiesListOfDynamics[widget.currentCityNumber] = city;
+
+        List<String> citiesListOfStrings = [];
+        for (var city in citiesListOfDynamics) {
+          citiesListOfStrings.add(jsonEncode(city));
+          print(city.toString());
+        }
+
+        prefs.setStringList("cities", citiesListOfStrings);
+
+        switch (currentWeather["weather"][0]["main"]) {
           case "Thunderstorm":
           case "Drizzle":
           case "Rain":
@@ -303,7 +314,15 @@ class _WeatherForecastState extends State<WeatherForecast> {
               ),
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushNamed('/chooseLocation');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChooseLocation(
+                        citiesListOfDynamics: citiesListOfDynamics,
+                      ),
+                    ),
+                  );
+                  // Navigator.of(context).pushNamed('/chooseLocation');
                 },
                 child: Icon(Icons.home_outlined),
               ),
