@@ -173,27 +173,20 @@ class _WeatherForecastState extends State<WeatherForecast> {
       List<Placemark> placemark =
           await placemarkFromCoordinates(position.latitude, position.longitude);
 
-      List<String> citiesListOfStrings = prefs.getStringList("cities")!;
-      // Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
       var newCity = new Map<String, dynamic>();
-
       newCity["latitude"] = position.latitude;
       newCity["longitude"] = position.longitude;
       newCity["name"] = placemark.first.locality;
 
-      List<dynamic> citiesListOfDynamic =
-      jsonDecode(citiesListOfStrings.toString());
-      citiesListOfDynamic.add(newCity);
+      citiesListOfDynamics[widget.currentCityNumber] = newCity;
 
       List<String> newCitiesListOfStrings = [];
-      for (var city in citiesListOfDynamic) {
+      for (var city in citiesListOfDynamics) {
         newCitiesListOfStrings.add(jsonEncode(city));
       }
-
       prefs.setStringList("cities", newCitiesListOfStrings);
-      // prefs.setString("city", jsonEncode(newCity));
 
-      print("Got location data");
+      print("Get location data from button");
       _loadData();
     });
   }
