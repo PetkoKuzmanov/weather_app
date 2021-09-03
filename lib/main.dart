@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -10,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:weather_app/data/CurrentForecastWeatherData.dart';
 
 import 'SearchLocation.dart';
 import 'chooseLocation.dart';
@@ -28,9 +26,9 @@ class MyApp extends StatelessWidget {
         statusBarColor: Color.fromRGBO(255, 255, 255, 0.0)));
 
     return MaterialApp(
-      home: WeatherForecast(),
+      home: WeatherForecast(currentCityNumber: 0),
       routes: <String, WidgetBuilder>{
-        '/mainScreen': (BuildContext context) => WeatherForecast(),
+        // '/mainScreen': (BuildContext context) => WeatherForecast(currentCityNumber: null),
         '/chooseLocation': (BuildContext context) => ChooseLocation(),
         '/searchLocation': (BuildContext context) => SearchLocation(),
       },
@@ -39,7 +37,10 @@ class MyApp extends StatelessWidget {
 }
 
 class WeatherForecast extends StatefulWidget {
-  const WeatherForecast({Key? key}) : super(key: key);
+  WeatherForecast({Key? key, required this.currentCityNumber})
+      : super(key: key);
+
+  final int currentCityNumber;
 
   @override
   _WeatherForecastState createState() => _WeatherForecastState();
@@ -95,7 +96,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
           _getTopBarContainer(),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadData,
+              onRefresh: () => _loadData(),
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 padding: EdgeInsets.only(bottom: 50.0),
@@ -132,7 +133,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
   void _getWeatherData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (prefs.getString("city") == null) {
+    if (prefs.getStringList("cities") == null) {
       _determinePosition().then((position) {
         _addNewLocationDataToSharedPreferences(
             position.latitude, position.longitude);
@@ -149,13 +150,16 @@ class _WeatherForecastState extends State<WeatherForecast> {
     List<Placemark> placemark =
         await placemarkFromCoordinates(latitude, longitude);
 
+    List<String> newCitiesList = [];
     var newCity = new Map<String, dynamic>();
 
     newCity["latitude"] = latitude;
     newCity["longitude"] = longitude;
     newCity["name"] = placemark.first.locality;
 
-    prefs.setString("city", jsonEncode(newCity));
+    newCitiesList.add(jsonEncode(newCity));
+
+    prefs.setStringList("cities", newCitiesList);
 
     print("Got location data");
     _loadData();
@@ -175,13 +179,25 @@ class _WeatherForecastState extends State<WeatherForecast> {
     List<Placemark> placemark =
         await placemarkFromCoordinates(latitude, longitude);
 
-    Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
+    List<String> citiesListOfStrings = prefs.getStringList("cities")!;
+    // Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
+    var newCity = new Map<String, dynamic>();
 
     newCity["latitude"] = latitude;
     newCity["longitude"] = longitude;
     newCity["name"] = placemark.first.locality;
 
-    prefs.setString("city", jsonEncode(newCity));
+    List<dynamic> citiesListOfDynamic =
+        jsonDecode(citiesListOfStrings.toString());
+    citiesListOfDynamic.add(newCity);
+
+    List<String> newCitiesListOfStrings = [];
+    for (var city in citiesListOfDynamic) {
+      newCitiesListOfStrings.add(jsonEncode(city));
+    }
+
+    prefs.setStringList("cities", newCitiesListOfStrings);
+    // prefs.setString("city", jsonEncode(newCity));
 
     print("Got location data");
     _loadData();
@@ -190,11 +206,19 @@ class _WeatherForecastState extends State<WeatherForecast> {
   Future<void> _loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    city = jsonDecode(prefs.getString("city")!);
+    List<String> citiesListOfStrings = prefs.getStringList("cities")!;
+    citiesData = jsonDecode(citiesListOfStrings.toString());
+
+    city = citiesData[widget.currentCityNumber];
+    // city = jsonDecode(prefs.getString("city")!);
     latitude = city["latitude"];
     longitude = city["longitude"];
     cityName = city["name"];
 
+    print("Number of cities: " + citiesData.length.toString());
+    for (dynamic city in citiesData) {
+      print("City: " + city["name"]);
+    }
     print(latitude);
     print(longitude);
     print(cityName);

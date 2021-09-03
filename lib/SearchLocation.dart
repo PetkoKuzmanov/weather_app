@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'main.dart';
+
 class SearchLocation extends StatefulWidget {
   const SearchLocation({Key? key}) : super(key: key);
 
@@ -108,7 +110,18 @@ class CityWidget extends StatelessWidget {
       onTap: () {
         _addLocationDataToSharedPreferences(
                 double.parse(latitude), double.parse(longitude), city)
-            .then((value) => Navigator.of(context).pushNamed('/mainScreen'));
+            .then((newCityNumber) => {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => WeatherForecast(
+                        currentCityNumber: newCityNumber,
+                      ),
+                    ),
+                  )
+                });
+
+        // Navigator.of(context).pushNamed('/mainScreen'));
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -164,17 +177,27 @@ extension StringExtension on String {
   }
 }
 
-Future<void> _addLocationDataToSharedPreferences(
+Future<int> _addLocationDataToSharedPreferences(
     double latitude, double longitude, String cityName) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
+  List<String> citiesListOfStrings = prefs.getStringList("cities")!;
+
+  var newCity = new Map<String, dynamic>();
 
   newCity["latitude"] = latitude;
   newCity["longitude"] = longitude;
   newCity["name"] = cityName;
 
-  prefs.setString("city", jsonEncode(newCity));
+  List<dynamic> citiesListOfDynamic =
+      jsonDecode(citiesListOfStrings.toString());
+  citiesListOfDynamic.add(newCity);
 
+  List<String> newCitiesListOfStrings = [];
+  for (var city in citiesListOfDynamic) {
+    newCitiesListOfStrings.add(jsonEncode(city));
+  }
 
+  prefs.setStringList("cities", newCitiesListOfStrings);
+  return citiesListOfDynamic.length - 1;
 }
