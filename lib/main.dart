@@ -133,7 +133,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
   void _getWeatherData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (prefs.getStringList("cities") == null) {
+    if (prefs.getStringList("cities") == null ||
+        prefs.getStringList("cities")!.isEmpty) {
       _determinePosition().then((position) {
         _addNewLocationDataToSharedPreferences(
             position.latitude, position.longitude);
@@ -166,41 +167,35 @@ class _WeatherForecastState extends State<WeatherForecast> {
   }
 
   void _getWeatherDataFromButton() async {
-    _determinePosition().then((position) {
-      _addLocationDataToSharedPreferences(
-          position.latitude, position.longitude);
+    _determinePosition().then((position) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      List<Placemark> placemark =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      List<String> citiesListOfStrings = prefs.getStringList("cities")!;
+      // Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
+      var newCity = new Map<String, dynamic>();
+
+      newCity["latitude"] = position.latitude;
+      newCity["longitude"] = position.longitude;
+      newCity["name"] = placemark.first.locality;
+
+      List<dynamic> citiesListOfDynamic =
+      jsonDecode(citiesListOfStrings.toString());
+      citiesListOfDynamic.add(newCity);
+
+      List<String> newCitiesListOfStrings = [];
+      for (var city in citiesListOfDynamic) {
+        newCitiesListOfStrings.add(jsonEncode(city));
+      }
+
+      prefs.setStringList("cities", newCitiesListOfStrings);
+      // prefs.setString("city", jsonEncode(newCity));
+
+      print("Got location data");
+      _loadData();
     });
-  }
-
-  void _addLocationDataToSharedPreferences(
-      double latitude, double longitude) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    List<Placemark> placemark =
-        await placemarkFromCoordinates(latitude, longitude);
-
-    List<String> citiesListOfStrings = prefs.getStringList("cities")!;
-    // Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
-    var newCity = new Map<String, dynamic>();
-
-    newCity["latitude"] = latitude;
-    newCity["longitude"] = longitude;
-    newCity["name"] = placemark.first.locality;
-
-    List<dynamic> citiesListOfDynamic =
-        jsonDecode(citiesListOfStrings.toString());
-    citiesListOfDynamic.add(newCity);
-
-    List<String> newCitiesListOfStrings = [];
-    for (var city in citiesListOfDynamic) {
-      newCitiesListOfStrings.add(jsonEncode(city));
-    }
-
-    prefs.setStringList("cities", newCitiesListOfStrings);
-    // prefs.setString("city", jsonEncode(newCity));
-
-    print("Got location data");
-    _loadData();
   }
 
   Future<void> _loadData() async {
@@ -209,7 +204,11 @@ class _WeatherForecastState extends State<WeatherForecast> {
     List<String> citiesListOfStrings = prefs.getStringList("cities")!;
     citiesListOfDynamics = jsonDecode(citiesListOfStrings.toString());
 
-    city = citiesListOfDynamics[widget.currentCityNumber];
+    if (citiesListOfDynamics.length <= widget.currentCityNumber) {
+      city = citiesListOfDynamics[0];
+    } else {
+      city = citiesListOfDynamics[widget.currentCityNumber];
+    }
     // city = jsonDecode(prefs.getString("city")!);
     latitude = city["latitude"];
     longitude = city["longitude"];
@@ -243,8 +242,11 @@ class _WeatherForecastState extends State<WeatherForecast> {
         hourlyWeather = city["forecast"]["hourly"];
         dailyWeather = city["forecast"]["daily"];
 
-
-        citiesListOfDynamics[widget.currentCityNumber] = city;
+        if (citiesListOfDynamics.length <= widget.currentCityNumber) {
+          citiesListOfDynamics[0] = city;
+        } else {
+          citiesListOfDynamics[widget.currentCityNumber] = city;
+        }
 
         List<String> citiesListOfStrings = [];
         for (var city in citiesListOfDynamics) {
@@ -297,9 +299,12 @@ class _WeatherForecastState extends State<WeatherForecast> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            cityName,
-            style: TextStyle(fontSize: 30.0),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 250),
+            child: Text(
+              cityName,
+              style: TextStyle(fontSize: 30.0),
+            ),
           ),
           Row(
             children: [

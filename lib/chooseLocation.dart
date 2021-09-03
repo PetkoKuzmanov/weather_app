@@ -61,6 +61,8 @@ class _ChooseLocationState extends State<ChooseLocation> {
         description: currentWeather["weather"][0]["main"],
         image: backgroundImage,
         index: i,
+        listOfDynamics: widget.citiesListOfDynamics,
+        listOfWidgets: cityWidgets,
       );
 
       cityWidgets.add(cityWidget);
@@ -105,6 +107,10 @@ class _ChooseLocationState extends State<ChooseLocation> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).pushNamed('/searchLocation');
+
+          print("List of dynamics: " +
+              widget.citiesListOfDynamics.length.toString());
+          print("List of Widgets: " + cityWidgets.length.toString());
         },
         child: const Icon(Icons.add_outlined),
         backgroundColor: Colors.blueAccent,
@@ -113,64 +119,179 @@ class _ChooseLocationState extends State<ChooseLocation> {
   }
 }
 
+// class CityWidget extends StatefulWidget {
+//   const CityWidget({
+//     Key? key,
+//     required this.name,
+//     required this.temperature,
+//     required this.description,
+//     required this.image,
+//     required this.index,
+//     required this.listOfDynamics,
+//     required this.listOfWidgets,
+//   }) : super(key: key);
+//
+//   final String name;
+//   final String temperature;
+//   final String description;
+//   final String image;
+//   final int index;
+//   final List listOfDynamics;
+//   final List listOfWidgets;
+//
+//   @override
+//   _CityWidgetState createState() => _CityWidgetState();
+// }
+
+// class _CityWidgetState extends State<CityWidget> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Dismissible(
+//       key: UniqueKey(),
+//       onDismissed: (direction) {
+//         removeCityFromSharedPreferences();
+//         print(widget.listOfDynamics.length);
+//       },
+//       child: GestureDetector(
+//         onTap: () {
+//           Navigator.push(
+//             context,
+//             MaterialPageRoute(
+//               builder: (context) => WeatherForecast(
+//                 currentCityNumber: widget.index,
+//               ),
+//             ),
+//           );
+//         },
+//         child: Container(
+//           decoration: BoxDecoration(
+//             image: DecorationImage(
+//               image: AssetImage(
+//                   Strings.backgroundImagesUrl + widget.image + ".png"),
+//               fit: BoxFit.cover,
+//             ),
+//           ),
+//           padding: EdgeInsets.fromLTRB(20.0, 20.0, 0.0, 10.0),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.stretch,
+//             children: [
+//               Text(
+//                 widget.name,
+//                 style: TextStyle(fontSize: 17.0),
+//               ),
+//               SizedBox(height: 10.0),
+//               Text(
+//                 double.parse(widget.temperature).round().toString() + "°",
+//                 style: TextStyle(fontSize: 17.0),
+//               ),
+//               SizedBox(height: 5.0),
+//               Text(
+//                 widget.description,
+//                 style: TextStyle(fontSize: 14.0),
+//               )
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Future<void> removeCityFromSharedPreferences() async {
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//
+//     widget.listOfWidgets.removeAt(widget.index);
+//     widget.listOfDynamics.removeAt(widget.index);
+//
+//     List<String> newCitiesListOfStrings = [];
+//     for (var city in widget.listOfDynamics) {
+//       newCitiesListOfStrings.add(jsonEncode(city));
+//     }
+//
+//     prefs.setStringList("cities", newCitiesListOfStrings);
+//   }
+// }
+
 class CityWidget extends StatelessWidget {
-  const CityWidget(
-      {Key? key,
-      required this.name,
-      required this.temperature,
-      required this.description,
-      required this.image,
-      required this.index})
-      : super(key: key);
+  const CityWidget({
+    Key? key,
+    required this.name,
+    required this.temperature,
+    required this.description,
+    required this.image,
+    required this.index,
+    required this.listOfDynamics,
+    required this.listOfWidgets,
+  }) : super(key: key);
 
   final String name;
   final String temperature;
   final String description;
   final String image;
   final int index;
+  final List listOfDynamics;
+  final List listOfWidgets;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WeatherForecast(
-              currentCityNumber: index,
-            ),
-          ),
-        );
+    return Dismissible(
+      key: UniqueKey(),
+      background: Container(color: Colors.red.withOpacity(0.5)),
+      onDismissed: (direction) {
+        removeCityFromSharedPreferences();
       },
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(Strings.backgroundImagesUrl + "$image.png"),
-            fit: BoxFit.cover,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WeatherForecast(
+                currentCityNumber: index,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(Strings.backgroundImagesUrl + "$image.png"),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        padding: EdgeInsets.fromLTRB(20.0, 20.0, 0.0, 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              name,
-              style: TextStyle(fontSize: 17.0),
-            ),
-            SizedBox(height: 10.0),
-            Text(
-              double.parse(temperature).round().toString() + "°",
-              style: TextStyle(fontSize: 17.0),
-            ),
-            SizedBox(height: 5.0),
-            Text(
-              description,
-              style: TextStyle(fontSize: 14.0),
-            )
-          ],
+          padding: EdgeInsets.fromLTRB(20.0, 20.0, 0.0, 10.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                name,
+                style: TextStyle(fontSize: 17.0),
+              ),
+              SizedBox(height: 10.0),
+              Text(
+                double.parse(temperature).round().toString() + "°",
+                style: TextStyle(fontSize: 17.0),
+              ),
+              SizedBox(height: 5.0),
+              Text(
+                description,
+                style: TextStyle(fontSize: 14.0),
+              )
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> removeCityFromSharedPreferences() async {
+    listOfDynamics.removeAt(index);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<String> newCitiesListOfStrings = [];
+    for (var city in listOfDynamics) {
+      newCitiesListOfStrings.add(jsonEncode(city));
+    }
+
+    prefs.setStringList("cities", newCitiesListOfStrings);
   }
 }
 
