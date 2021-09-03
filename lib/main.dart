@@ -61,6 +61,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
   late double longitude;
   late String cityName;
 
+  var lastUpdated = "Just updated";
+  var minutesSinceLastUpdate = 0;
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +72,25 @@ class _WeatherForecastState extends State<WeatherForecast> {
 
   @override
   Widget build(BuildContext context) {
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    if (city["lastUpdated"] != null) {
+      minutesSinceLastUpdate =
+          (((DateTime.now().millisecondsSinceEpoch / 1000) -
+                      city["lastUpdated"]) /
+                  60)
+              .round();
+      print("Minutes: " + minutesSinceLastUpdate.toString());
+
+      if (minutesSinceLastUpdate < 1) {
+        lastUpdated = "Just updated";
+      } else if (minutesSinceLastUpdate < 60) {
+        lastUpdated = "Updated $minutesSinceLastUpdate minutes ago";
+      } else if (minutesSinceLastUpdate > 60) {
+        var hoursSinceLastUpdate = (minutesSinceLastUpdate / 60).round();
+        lastUpdated = "Updated $hoursSinceLastUpdate hours ago";
+      }
+    }
+
     return Scaffold(
       body: getBody(),
     );
@@ -230,6 +252,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
             convert.jsonDecode(response.body) as Map<String, dynamic>;
 
         city["forecast"] = responseBody;
+        city["lastUpdated"] = (DateTime.now().millisecondsSinceEpoch / 1000);
 
         currentWeather = city["forecast"]["current"];
         hourlyWeather = city["forecast"]["hourly"];
@@ -292,12 +315,27 @@ class _WeatherForecastState extends State<WeatherForecast> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 250),
-            child: Text(
-              cityName,
-              style: TextStyle(fontSize: 30.0),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 250),
+                child: Text(
+                  cityName,
+                  style: TextStyle(fontSize: 30.0),
+                ),
+              ),
+              SizedBox(
+                height: 5.0,
+              ),
+              Text(
+                lastUpdated,
+                style: TextStyle(
+                  fontSize: 15.0,
+                  color: Colors.black.withOpacity(0.5),
+                ),
+              )
+            ],
           ),
           Row(
             children: [
