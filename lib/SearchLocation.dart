@@ -165,10 +165,16 @@ extension StringExtension on String {
 }
 
 Future<void> _addLocationDataToSharedPreferences(
-    double latitude, double longitude, String city) async {
+    double latitude, double longitude, String cityName) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  await prefs.setDouble('latitude', latitude);
-  await prefs.setDouble('longitude', longitude);
-  await prefs.setString('city', city);
+  Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
+
+  newCity["latitude"] = latitude;
+  newCity["longitude"] = longitude;
+  newCity["name"] = cityName;
+
+  prefs.setString("city", jsonEncode(newCity));
+
+
 }

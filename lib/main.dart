@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:weather_app/data/CurrentForecastWeatherData.dart';
 
 import 'SearchLocation.dart';
 import 'chooseLocation.dart';
@@ -44,6 +46,8 @@ class WeatherForecast extends StatefulWidget {
 }
 
 class _WeatherForecastState extends State<WeatherForecast> {
+  var citiesData = new Map<String, dynamic>();
+  var city = new Map<String, dynamic>();
   var currentWeather = new Map<String, dynamic>();
   List hourlyWeather = [];
   List dailyWeather = [];
@@ -54,15 +58,13 @@ class _WeatherForecastState extends State<WeatherForecast> {
   var dailyWeatherContainer = Container();
   var detailsContainer = Container();
 
-  var currentTimeInSeconds = DateTime
-      .now()
-      .millisecondsSinceEpoch / 1000;
+  var currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch / 1000;
 
   var backgroundImage = "day_clear";
 
   late double latitude;
   late double longitude;
-  late String city;
+  late String cityName;
 
   @override
   void initState() {
@@ -96,7 +98,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
       ),
       child: Column(
         children: <Widget>[
-          topBarContainer,
+          _getTopBarContainer(),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
@@ -106,18 +108,18 @@ class _WeatherForecastState extends State<WeatherForecast> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    currentWeatherContainer,
+                    _getCurrentWeather(),
                     SizedBox(height: 25.0),
                     Center(
-                      child: hourlyWeatherContainer,
+                      child: _getHourlyForecast(),
                     ),
                     SizedBox(height: 25.0),
                     Center(
-                      child: dailyWeatherContainer,
+                      child: _getDailyForecast(),
                     ),
                     SizedBox(height: 25.0),
                     Center(
-                      child: detailsContainer,
+                      child: _getDetails(),
                     ),
                   ],
                 ),
@@ -136,15 +138,34 @@ class _WeatherForecastState extends State<WeatherForecast> {
   void _getWeatherData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    var lastLatitude = prefs.getDouble('latitude');
-    if (lastLatitude == null) {
+    var newCity = prefs.getString("city") ?? "No data";
+    if (newCity == "No data") {
       _determinePosition().then((position) {
-        _addLocationDataToSharedPreferences(
+        _addNewLocationDataToSharedPreferences(
             position.latitude, position.longitude);
       });
     } else {
       _loadData();
     }
+  }
+
+  void _addNewLocationDataToSharedPreferences(
+      double latitude, double longitude) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<Placemark> placemark =
+        await placemarkFromCoordinates(latitude, longitude);
+
+    var newCity = new Map<String, dynamic>();
+
+    newCity["latitude"] = latitude;
+    newCity["longitude"] = longitude;
+    newCity["name"] = placemark.first.locality;
+
+    prefs.setString("city", jsonEncode(newCity));
+
+    print("Got location data");
+    _loadData();
   }
 
   void _getWeatherDataFromButton() async {
@@ -154,20 +175,21 @@ class _WeatherForecastState extends State<WeatherForecast> {
     });
   }
 
-  void _addLocationDataToSharedPreferences(double latitude,
-      double longitude) async {
+  void _addLocationDataToSharedPreferences(
+      double latitude, double longitude) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     List<Placemark> placemark =
-    await placemarkFromCoordinates(latitude, longitude);
+        await placemarkFromCoordinates(latitude, longitude);
 
-    await prefs.setDouble('latitude', latitude);
-    await prefs.setDouble('longitude', longitude);
-    await prefs.setString('city', placemark.first.locality ?? "City");
+    Map<String, dynamic> newCity = jsonDecode(prefs.getString("city")!);
 
-    print(prefs.getDouble('latitude'));
-    print(prefs.getDouble('longitude'));
-    print(prefs.getString('city'));
+    newCity["latitude"] = latitude;
+    newCity["longitude"] = longitude;
+    newCity["name"] = placemark.first.locality;
+
+    prefs.setString("city", jsonEncode(newCity));
+
     print("Got location data");
     _loadData();
   }
@@ -175,13 +197,14 @@ class _WeatherForecastState extends State<WeatherForecast> {
   Future<void> _loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    latitude = prefs.getDouble('latitude')!;
-    longitude = prefs.getDouble('longitude')!;
-    city = prefs.getString('city')!;
+    city = jsonDecode(prefs.getString("city")!);
+    latitude = city["latitude"];
+    longitude = city["longitude"];
+    cityName = city["name"];
 
     print(latitude);
     print(longitude);
-    print(city);
+    print(cityName);
 
     var url = Uri.http(Strings.weatherUri, "/data/2.5/onecall", {
       "lat": latitude.toString(),
@@ -195,23 +218,18 @@ class _WeatherForecastState extends State<WeatherForecast> {
     setState(() {
       if (response.statusCode == 200) {
         var responseBody =
-        convert.jsonDecode(response.body) as Map<String, dynamic>;
+            convert.jsonDecode(response.body) as Map<String, dynamic>;
 
-        currentWeather = responseBody["current"];
-        hourlyWeather = responseBody["hourly"];
-        dailyWeather = responseBody["daily"];
+        city["latitude"] = latitude;
+        city["longitude"] = longitude;
+        city["name"] = cityName;
+        city["forecast"] = responseBody;
 
-        // await prefs.setStringList('current', responseBody["current"]);
-        // await prefs.setStringList('hourly', responseBody["hourly"]);
-        // await prefs.setStringList('daily', responseBody["daily"]);
+        currentWeather = city["forecast"]["current"];
+        hourlyWeather = city["forecast"]["hourly"];
+        dailyWeather = city["forecast"]["daily"];
 
-        topBarContainer = _getTopBarContainer();
-        currentWeatherContainer = _getCurrentWeather();
-        hourlyWeatherContainer = _getHourlyForecast();
-        dailyWeatherContainer = _getDailyForecast();
-        detailsContainer = _getDetails();
-
-        switch (currentWeather["weather"][0]["main"]) {
+        switch (city["forecast"]["current"]["weather"][0]["main"]) {
           case "Thunderstorm":
           case "Drizzle":
           case "Rain":
@@ -236,7 +254,6 @@ class _WeatherForecastState extends State<WeatherForecast> {
             }
             break;
         }
-
         print('Request completed');
       } else {
         print('Request failed with status: ${response.statusCode}.');
@@ -256,7 +273,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            city,
+            cityName,
             style: TextStyle(fontSize: 30.0),
           ),
           Row(
@@ -297,8 +314,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
             children: [
               Text(
                 double.parse(currentWeather["temp"].toString())
-                    .round()
-                    .toString() +
+                        .round()
+                        .toString() +
                     "°",
                 style: TextStyle(fontSize: 125.0),
               ),
@@ -308,7 +325,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                   Container(
                     width: 80.0,
                     padding:
-                    EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -318,8 +335,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                         ),
                         Text(
                             double.parse(currentWeather["clouds"].toString())
-                                .round()
-                                .toString() +
+                                    .round()
+                                    .toString() +
                                 "%",
                             style: TextStyle(fontSize: 15.0)),
                       ],
@@ -335,7 +352,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
                   Container(
                     width: 80.0,
                     padding:
-                    EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -345,9 +362,9 @@ class _WeatherForecastState extends State<WeatherForecast> {
                         ),
                         Text(
                             double.parse(
-                                currentWeather["feels_like"].toString())
-                                .round()
-                                .toString() +
+                                        currentWeather["feels_like"].toString())
+                                    .round()
+                                    .toString() +
                                 "°",
                             style: TextStyle(fontSize: 15.0)),
                       ],
@@ -372,8 +389,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                 Icon(Icons.arrow_upward_rounded),
                 Text(
                   double.parse(dailyWeather[0]["temp"]["max"].toString())
-                      .round()
-                      .toString() +
+                          .round()
+                          .toString() +
                       "°C",
                   style: TextStyle(fontSize: 20.0),
                 ),
@@ -383,8 +400,8 @@ class _WeatherForecastState extends State<WeatherForecast> {
                 Icon(Icons.arrow_downward_rounded),
                 Text(
                   double.parse(dailyWeather[0]["temp"]["min"].toString())
-                      .round()
-                      .toString() +
+                          .round()
+                          .toString() +
                       "°C",
                   style: TextStyle(fontSize: 20.0),
                 ),
@@ -645,8 +662,8 @@ class _HourlyForecastWidgetState extends State<HourlyForecastWidget> {
           ),
           Text(
             double.parse(widget.hourlyForecast["temp"].toString())
-                .round()
-                .toString() +
+                    .round()
+                    .toString() +
                 "°",
             style: TextStyle(fontSize: 15.0),
           ),
@@ -673,7 +690,7 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
   @override
   Widget build(BuildContext context) {
     var dateTime =
-    DateTime.fromMillisecondsSinceEpoch(widget.dailyForecast["dt"] * 1000);
+        DateTime.fromMillisecondsSinceEpoch(widget.dailyForecast["dt"] * 1000);
     var date = DateFormat.MMMd().format(dateTime);
 
     var dayOfWeek = DateFormat.E().format(dateTime);
@@ -719,8 +736,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
             children: [
               Text(
                 double.parse(widget.dailyForecast["temp"]["max"].toString())
-                    .round()
-                    .toString() +
+                        .round()
+                        .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
@@ -735,8 +752,8 @@ class _DailyForecastWidgetState extends State<DailyForecastWidget> {
             children: [
               Text(
                 double.parse(widget.dailyForecast["temp"]["min"].toString())
-                    .round()
-                    .toString() +
+                        .round()
+                        .toString() +
                     "°",
                 style: TextStyle(fontSize: 15.0),
               ),
