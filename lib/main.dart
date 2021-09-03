@@ -46,17 +46,11 @@ class WeatherForecast extends StatefulWidget {
 }
 
 class _WeatherForecastState extends State<WeatherForecast> {
-  var citiesData = new Map<String, dynamic>();
+  List citiesData = [];
   var city = new Map<String, dynamic>();
   var currentWeather = new Map<String, dynamic>();
   List hourlyWeather = [];
   List dailyWeather = [];
-
-  var topBarContainer = Container();
-  var currentWeatherContainer = Container();
-  var hourlyWeatherContainer = Container();
-  var dailyWeatherContainer = Container();
-  var detailsContainer = Container();
 
   var currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch / 1000;
 
@@ -138,8 +132,7 @@ class _WeatherForecastState extends State<WeatherForecast> {
   void _getWeatherData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    var newCity = prefs.getString("city") ?? "No data";
-    if (newCity == "No data") {
+    if (prefs.getString("city") == null) {
       _determinePosition().then((position) {
         _addNewLocationDataToSharedPreferences(
             position.latitude, position.longitude);
@@ -220,9 +213,6 @@ class _WeatherForecastState extends State<WeatherForecast> {
         var responseBody =
             convert.jsonDecode(response.body) as Map<String, dynamic>;
 
-        city["latitude"] = latitude;
-        city["longitude"] = longitude;
-        city["name"] = cityName;
         city["forecast"] = responseBody;
 
         currentWeather = city["forecast"]["current"];
